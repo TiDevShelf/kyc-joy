@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, CheckCircle2, Shield } from 'lucide-react';
 import VerificationProgress, { VerificationStep } from '@/components/VerificationProgress';
 import VerificationStatus from '@/components/VerificationStatus';
+import VerificationDetails from '@/components/VerificationDetails';
 import AadhaarVerification from '@/components/AadhaarVerification';
 import PANVerification from '@/components/PANVerification';
 import BankVerification from '@/components/BankVerification';
@@ -190,7 +191,17 @@ const Index = () => {
                 />
               )}
 
-              {/* Verification Steps */}
+              {/* Display Verification Details if any is verified */}
+              {(verificationData.aadhaar.verified || 
+                verificationData.pan.verified || 
+                verificationData.bank.verified) && (
+                <VerificationDetails 
+                  verificationData={verificationData}
+                  className="mb-6"
+                />
+              )}
+
+              {/* Verification Forms */}
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 {isVerificationCompleted ? (
                   <div className="text-center py-8 space-y-4">
