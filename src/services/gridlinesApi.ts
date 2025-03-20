@@ -1,265 +1,115 @@
 
-// API service for Gridlines integration
+// Gridlines API service for KYC verification
 
-// Types for API requests and responses
-export interface AadhaarOtpRequest {
-  aadhaar: string;
-}
+// Base API URL
+const API_BASE_URL = 'https://api.gridlines.io';
 
-export interface AadhaarOtpResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    client_id: string;
-  };
-  error?: string;
-}
+// Endpoints
+const ENDPOINTS = {
+  // Aadhaar endpoints
+  GENERATE_AADHAAR_OTP: '/aadhaar-api/boson/generate-otp',
+  VERIFY_AADHAAR_OTP: '/aadhaar-api/boson/verify-otp',
+  
+  // PAN endpoints
+  VERIFY_PAN: '/pan-api/boson/verify',
+  
+  // Bank account endpoints
+  VERIFY_BANK_ACCOUNT: '/bank-api/boson/verify',
+};
 
-export interface AadhaarVerifyOtpRequest {
-  client_id: string;
-  otp: string;
-}
-
-export interface AadhaarVerifyOtpResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    aadhaar_last_4: string;
-    client_id: string;
-    full_name: string;
-    gender: string;
-    dob: string;
-  };
-  error?: string;
-}
-
-export interface PanVerificationRequest {
-  pan: string;
-}
-
-export interface PanVerificationResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    pan: string;
-    full_name: string;
-    aadhaar_seeding_status: string;
-  };
-  error?: string;
-}
-
-export interface BankVerificationRequest {
-  account_number: string;
-  ifsc: string;
-}
-
-export interface BankVerificationResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    account_number: string;
-    ifsc: string;
-    bank_name: string;
-    account_holder_name: string;
-    branch: string;
-  };
-  error?: string;
-}
-
-// Gridlines API base URL
-const GRIDLINES_API_BASE_URL = 'https://api.gridlines.io';
-
-/**
- * Generate OTP for Aadhaar verification
- */
-export const generateAadhaarOtp = async (aadhaar: string): Promise<AadhaarOtpResponse> => {
-  try {
-    // For development/demo purposes, we'll mock the API response
-    // In production, this would be a real API call
-    console.log('Generating OTP for Aadhaar:', aadhaar);
-    
-    // Mock successful response
-    return {
-      success: true,
-      message: 'OTP sent successfully',
-      data: {
-        client_id: 'mock-client-id-12345'
+// Mock API response function (for development)
+const mockApiResponse = async (endpoint: string, data: any) => {
+  console.log(`Mock API call to ${endpoint}`, data);
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Return mocked responses based on endpoint
+  switch (endpoint) {
+    case ENDPOINTS.GENERATE_AADHAAR_OTP:
+      // Simulate OTP sent success
+      if (data.aadhaar.length === 12) {
+        return { 
+          success: true, 
+          txnId: 'mock-txn-' + Math.floor(Math.random() * 10000),
+          message: 'OTP sent successfully to registered mobile number' 
+        };
       }
-    };
-    
-    // Actual implementation would be:
-    /*
-    const response = await fetch(`${GRIDLINES_API_BASE_URL}/aadhaar-api/boson/generate-otp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GRIDLINES_API_KEY}`
-      },
-      body: JSON.stringify({ aadhaar })
-    });
-    
-    return await response.json();
-    */
-  } catch (error) {
-    console.error('Error generating OTP:', error);
-    return {
-      success: false,
-      message: 'Failed to generate OTP',
-      error: 'Network or server error'
-    };
+      return { success: false, message: 'Invalid Aadhaar number' };
+      
+    case ENDPOINTS.VERIFY_AADHAAR_OTP:
+      // Simple logic: accept OTP if it's 6 digits
+      if (data.otp.length === 6) {
+        return { 
+          success: true,
+          data: {
+            name: 'John Doe',
+            gender: 'M',
+            dob: '15-08-1990',
+            address: '123 Main St, Mumbai, India'
+          },
+          message: 'Aadhaar verified successfully' 
+        };
+      }
+      return { success: false, message: 'Invalid OTP' };
+      
+    case ENDPOINTS.VERIFY_PAN:
+      // Simple logic: accept PAN if it's valid format
+      if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(data.pan)) {
+        return { 
+          success: true,
+          data: {
+            name: 'John Doe',
+            dob: '15-08-1990',
+            panStatus: 'ACTIVE'
+          },
+          message: 'PAN verified successfully' 
+        };
+      }
+      return { success: false, message: 'Invalid PAN' };
+      
+    case ENDPOINTS.VERIFY_BANK_ACCOUNT:
+      // Simple logic: accept if account number is 8+ digits and IFSC is valid format
+      if (data.accountNumber.length >= 8 && /^[A-Z]{4}0[A-Z0-9]{6}$/.test(data.ifsc)) {
+        return { 
+          success: true,
+          data: {
+            accountHolderName: 'John Doe',
+            bankName: 'State Bank of India',
+            accountType: 'Savings'
+          },
+          message: 'Bank account verified successfully' 
+        };
+      }
+      return { success: false, message: 'Invalid bank account details' };
+      
+    default:
+      return { success: false, message: 'Unknown endpoint' };
   }
 };
 
-/**
- * Verify Aadhaar OTP
- */
-export const verifyAadhaarOtp = async (client_id: string, otp: string): Promise<AadhaarVerifyOtpResponse> => {
-  try {
-    // For development/demo purposes, we'll mock the API response
-    console.log('Verifying OTP:', otp, 'for client_id:', client_id);
-    
-    // Check if OTP is 123456 for demo purposes
-    if (otp === '123456') {
-      return {
-        success: true,
-        message: 'OTP verified successfully',
-        data: {
-          aadhaar_last_4: '1234',
-          client_id,
-          full_name: 'John Doe',
-          gender: 'M',
-          dob: '1990-01-01'
-        }
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Invalid OTP',
-        error: 'The OTP entered is incorrect'
-      };
-    }
-    
-    // Actual implementation would be:
-    /*
-    const response = await fetch(`${GRIDLINES_API_BASE_URL}/aadhaar-api/boson/verify-otp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GRIDLINES_API_KEY}`
-      },
-      body: JSON.stringify({ client_id, otp })
-    });
-    
-    return await response.json();
-    */
-  } catch (error) {
-    console.error('Error verifying OTP:', error);
-    return {
-      success: false,
-      message: 'Failed to verify OTP',
-      error: 'Network or server error'
-    };
+// Gridlines API service
+const gridlinesApi = {
+  // Aadhaar verification APIs
+  generateAadhaarOTP: async (aadhaar: string) => {
+    // In a real implementation, you would use fetch or axios to call the actual API
+    // For this example, we'll use the mock API
+    return await mockApiResponse(ENDPOINTS.GENERATE_AADHAAR_OTP, { aadhaar });
+  },
+  
+  verifyAadhaarOTP: async (aadhaar: string, otp: string, txnId: string) => {
+    return await mockApiResponse(ENDPOINTS.VERIFY_AADHAAR_OTP, { aadhaar, otp, txnId });
+  },
+  
+  // PAN verification API
+  verifyPAN: async (pan: string, aadhaar?: string) => {
+    return await mockApiResponse(ENDPOINTS.VERIFY_PAN, { pan, aadhaar });
+  },
+  
+  // Bank account verification API
+  verifyBankAccount: async (accountNumber: string, ifsc: string) => {
+    return await mockApiResponse(ENDPOINTS.VERIFY_BANK_ACCOUNT, { accountNumber, ifsc });
   }
 };
 
-/**
- * Verify PAN
- */
-export const verifyPan = async (pan: string): Promise<PanVerificationResponse> => {
-  try {
-    // For development/demo purposes, we'll mock the API response
-    console.log('Verifying PAN:', pan);
-    
-    // Check if PAN is ABCDE1234F for demo purposes
-    if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
-      return {
-        success: true,
-        message: 'PAN verified successfully',
-        data: {
-          pan,
-          full_name: 'John Doe',
-          aadhaar_seeding_status: 'Y'
-        }
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Invalid PAN',
-        error: 'The PAN entered is incorrect'
-      };
-    }
-    
-    // Actual implementation would be:
-    /*
-    const response = await fetch(`${GRIDLINES_API_BASE_URL}/pan-api/v1/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GRIDLINES_API_KEY}`
-      },
-      body: JSON.stringify({ pan })
-    });
-    
-    return await response.json();
-    */
-  } catch (error) {
-    console.error('Error verifying PAN:', error);
-    return {
-      success: false,
-      message: 'Failed to verify PAN',
-      error: 'Network or server error'
-    };
-  }
-};
-
-/**
- * Verify Bank Account
- */
-export const verifyBankAccount = async (account_number: string, ifsc: string): Promise<BankVerificationResponse> => {
-  try {
-    // For development/demo purposes, we'll mock the API response
-    console.log('Verifying Bank Account:', account_number, 'with IFSC:', ifsc);
-    
-    // Mock successful response for valid IFSC format
-    if (/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
-      return {
-        success: true,
-        message: 'Bank account verified successfully',
-        data: {
-          account_number,
-          ifsc,
-          bank_name: 'MOCK BANK',
-          account_holder_name: 'John Doe',
-          branch: 'Main Branch'
-        }
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Invalid IFSC code',
-        error: 'The IFSC code entered is incorrect'
-      };
-    }
-    
-    // Actual implementation would be:
-    /*
-    const response = await fetch(`${GRIDLINES_API_BASE_URL}/bank-api/v1/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GRIDLINES_API_KEY}`
-      },
-      body: JSON.stringify({ account_number, ifsc })
-    });
-    
-    return await response.json();
-    */
-  } catch (error) {
-    console.error('Error verifying bank account:', error);
-    return {
-      success: false,
-      message: 'Failed to verify bank account',
-      error: 'Network or server error'
-    };
-  }
-};
+export default gridlinesApi;
