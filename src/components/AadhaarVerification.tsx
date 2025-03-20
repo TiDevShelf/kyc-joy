@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import gridlinesApi from '@/services/gridlinesApi';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AadhaarVerificationProps {
   onComplete: (data: any) => void;
@@ -126,6 +127,13 @@ const AadhaarVerification: React.FC<AadhaarVerificationProps> = ({ onComplete, o
         </div>
       ) : (
         <div className="space-y-4">
+          <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+            <AlertCircle className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-xs">
+              Demo mode: Enter any 6-digit OTP to verify. No real SMS is sent to your phone.
+            </AlertDescription>
+          </Alert>
+          
           <div className="space-y-2">
             <Label htmlFor="otp">Enter OTP</Label>
             <p className="text-sm text-muted-foreground">

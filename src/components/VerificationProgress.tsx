@@ -9,12 +9,14 @@ interface VerificationProgressProps {
   currentStep: VerificationStep;
   completedSteps: VerificationStep[];
   className?: string;
+  onStepClick?: (step: VerificationStep) => void;
 }
 
 const VerificationProgress: React.FC<VerificationProgressProps> = ({
   currentStep,
   completedSteps,
-  className
+  className,
+  onStepClick
 }) => {
   const steps: { id: VerificationStep; label: string }[] = [
     { id: 'aadhaar', label: 'Aadhaar' },
@@ -51,12 +53,22 @@ const VerificationProgress: React.FC<VerificationProgressProps> = ({
         const stepClass = cn(
           'flex flex-col items-center gap-2 z-10',
           'transition-all duration-300',
-          (isCompleted || isCurrent) && 'scale-105'
+          (isCompleted || isCurrent) && 'scale-105',
+          onStepClick && 'cursor-pointer hover:opacity-80'
         );
+
+        const handleClick = () => {
+          if (onStepClick) {
+            onStepClick(step.id);
+          }
+        };
 
         return (
           <React.Fragment key={step.id}>
-            <div className={stepClass}>
+            <div 
+              className={stepClass} 
+              onClick={handleClick}
+            >
               <StepIcon className={iconClass} />
               <span className={stepTextClass}>{step.label}</span>
             </div>

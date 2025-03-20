@@ -9,12 +9,13 @@ import {
   SidebarInset
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Shield } from 'lucide-react';
 import VerificationProgress, { VerificationStep } from '@/components/VerificationProgress';
 import VerificationStatus from '@/components/VerificationStatus';
 import AadhaarVerification from '@/components/AadhaarVerification';
 import PANVerification from '@/components/PANVerification';
 import BankVerification from '@/components/BankVerification';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
   // State for verification flow
@@ -74,43 +75,32 @@ const Index = () => {
       message: `${step.charAt(0).toUpperCase() + step.slice(1)} verification successful!`,
       status: 'success'
     });
-
-    // Move to next step after a short delay
-    setTimeout(() => {
-      moveToNextStep();
-    }, 1000);
   };
 
-  // Move to the next step
-  const moveToNextStep = () => {
-    if (currentStep === 'aadhaar') {
-      setCurrentStep('pan');
-    } else if (currentStep === 'pan') {
-      setCurrentStep('bank');
-    }
-    // Reset status message when moving to next step
+  // Select verification type
+  const selectVerificationType = (step: VerificationStep) => {
+    setCurrentStep(step);
+    // Reset status message when changing verification type
     setVerificationStatus({
       message: '',
       status: 'idle'
     });
   };
 
-  // Move to the previous step
-  const moveToPreviousStep = () => {
-    if (currentStep === 'pan') {
-      setCurrentStep('aadhaar');
-    } else if (currentStep === 'bank') {
-      setCurrentStep('pan');
-    }
-    // Reset status message when moving to prev step
-    setVerificationStatus({
-      message: '',
-      status: 'idle'
-    });
-  };
-
-  // Check if current flow is completed
+  // Check if all verifications are completed
   const isVerificationCompleted = completedSteps.length === 3;
+
+  // Note about mock implementation
+  const mockApiNote = (
+    <Alert className="mb-4 bg-amber-50 border-amber-200">
+      <Shield className="h-4 w-4 text-amber-500" />
+      <AlertTitle>Mock Implementation</AlertTitle>
+      <AlertDescription className="text-xs">
+        This is a demonstration using mock APIs. For Aadhaar verification, any 6-digit OTP will work. 
+        No actual SMS is sent to your registered mobile number.
+      </AlertDescription>
+    </Alert>
+  );
 
   return (
     <SidebarProvider>
@@ -124,35 +114,45 @@ const Index = () => {
             <div className="space-y-6">
               <VerificationProgress 
                 currentStep={currentStep} 
-                completedSteps={completedSteps} 
+                completedSteps={completedSteps}
+                onStepClick={selectVerificationType}
               />
               
               <div className="space-y-2">
                 <h3 className="font-medium text-foreground">Verification Steps:</h3>
                 <ul className="space-y-1.5 text-sm">
-                  <li className="flex items-center gap-2">
+                  <li 
+                    className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+                    onClick={() => selectVerificationType('aadhaar')}
+                  >
                     {completedSteps.includes('aadhaar') ? (
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     ) : (
-                      <div className="h-4 w-4 rounded-full border border-gray-300" />
+                      <div className={`h-4 w-4 rounded-full border ${currentStep === 'aadhaar' ? 'border-primary bg-primary/10' : 'border-gray-300'}`} />
                     )}
-                    <span>Aadhaar Verification</span>
+                    <span className={currentStep === 'aadhaar' ? 'font-medium' : ''}>Aadhaar Verification</span>
                   </li>
-                  <li className="flex items-center gap-2">
+                  <li 
+                    className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+                    onClick={() => selectVerificationType('pan')}
+                  >
                     {completedSteps.includes('pan') ? (
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     ) : (
-                      <div className="h-4 w-4 rounded-full border border-gray-300" />
+                      <div className={`h-4 w-4 rounded-full border ${currentStep === 'pan' ? 'border-primary bg-primary/10' : 'border-gray-300'}`} />
                     )}
-                    <span>PAN Verification</span>
+                    <span className={currentStep === 'pan' ? 'font-medium' : ''}>PAN Verification</span>
                   </li>
-                  <li className="flex items-center gap-2">
+                  <li 
+                    className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+                    onClick={() => selectVerificationType('bank')}
+                  >
                     {completedSteps.includes('bank') ? (
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     ) : (
-                      <div className="h-4 w-4 rounded-full border border-gray-300" />
+                      <div className={`h-4 w-4 rounded-full border ${currentStep === 'bank' ? 'border-primary bg-primary/10' : 'border-gray-300'}`} />
                     )}
-                    <span>Bank Account Verification</span>
+                    <span className={currentStep === 'bank' ? 'font-medium' : ''}>Bank Account Verification</span>
                   </li>
                 </ul>
               </div>
@@ -174,9 +174,12 @@ const Index = () => {
                 <p className="text-muted-foreground mt-2">
                   {isVerificationCompleted 
                     ? 'All verification steps completed successfully!' 
-                    : 'Please complete the following verification steps'}
+                    : 'Complete all verification steps to validate your KYC'}
                 </p>
               </div>
+
+              {/* Mock API Notice */}
+              {mockApiNote}
 
               {/* Verification Status Message */}
               {verificationStatus.message && (
@@ -194,7 +197,7 @@ const Index = () => {
                     <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
                     <h2 className="text-xl font-semibold">Verification Complete!</h2>
                     <p className="text-muted-foreground">
-                      Your identity has been successfully verified.
+                      Your identity has been successfully verified. Your KYC is now approved.
                     </p>
                     <Button className="mt-4">
                       Continue to Dashboard
@@ -223,30 +226,6 @@ const Index = () => {
                         onStatusChange={setVerificationStatus}
                       />
                     )}
-
-                    {/* Navigation Buttons */}
-                    <div className="flex justify-between mt-8">
-                      <Button 
-                        variant="outline" 
-                        onClick={moveToPreviousStep}
-                        disabled={currentStep === 'aadhaar'}
-                      >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
-                      </Button>
-                      
-                      <Button 
-                        onClick={moveToNextStep}
-                        disabled={
-                          (currentStep === 'aadhaar' && !completedSteps.includes('aadhaar')) ||
-                          (currentStep === 'pan' && !completedSteps.includes('pan')) ||
-                          currentStep === 'bank'
-                        }
-                      >
-                        Next
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
                   </>
                 )}
               </div>
