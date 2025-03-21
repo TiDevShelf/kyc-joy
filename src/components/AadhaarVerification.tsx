@@ -16,7 +16,8 @@ interface AadhaarVerificationProps {
 const AadhaarVerification: React.FC<AadhaarVerificationProps> = ({ onComplete, onStatusChange }) => {
   const [aadhaarNumber, setAadhaarNumber] = useState<string>('');
   const [otp, setOtp] = useState<string>('');
-  const [txnId, setTxnId] = useState<string>('');
+  const [transaction_id, setTxnId] = useState<string>('');
+  const [shareCode, setShareCode] = useState<string>('');
   const [step, setStep] = useState<'input' | 'otp'>('input');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -38,14 +39,20 @@ const AadhaarVerification: React.FC<AadhaarVerificationProps> = ({ onComplete, o
     onStatusChange({ message: 'Sending OTP...', status: 'loading' });
 
     try {
-      const response = await gridlinesApi.generateAadhaarOTP(aadhaarNumber);
-      
-      if (response.success) {
-        setTxnId(response.txnId);
+      const response = await gridlinesApi.generateAadhaarOTP(aadhaarNumber, "Y");
+
+      console.log("Generate OTP Response:", response);
+
+      if (response.status === 200 && response.data.code === "1001") {
+        setTxnId(response.data.transaction_id);
+        setShareCode(response.data.code);
         setStep('otp');
-        onStatusChange({ message: response.message, status: 'success' });
+        onStatusChange({ message: response.data.message, status: 'success' });
       } else {
-        onStatusChange({ message: response.message || 'Failed to send OTP', status: 'error' });
+        onStatusChange({ 
+          message: response.data.message || 'Failed to send OTP', 
+          status: 'error' 
+        });
       }
     } catch (error) {
       console.error('Error generating OTP:', error);
@@ -63,7 +70,7 @@ const AadhaarVerification: React.FC<AadhaarVerificationProps> = ({ onComplete, o
     onStatusChange({ message: 'Verifying OTP...', status: 'loading' });
 
     try {
-      const response = await gridlinesApi.verifyAadhaarOTP(aadhaarNumber, otp, txnId);
+      const response = await gridlinesApi.verifyAadhaarOTP(otp, transaction_id, shareCode);
       
       if (response.success) {
         onStatusChange({ message: 'Aadhaar verified successfully!', status: 'success' });

@@ -4,17 +4,19 @@
 // Base API URL
 const API_BASE_URL = 'https://api.gridlines.io';
 
+const API_KEY = "DZ464XpS1TSBy8h7dBl3qcViWcCWIt13";
+
 // Endpoints
 const ENDPOINTS = {
   // Aadhaar endpoints
   GENERATE_AADHAAR_OTP: '/aadhaar-api/boson/generate-otp',
-  VERIFY_AADHAAR_OTP: '/aadhaar-api/boson/verify-otp',
+  VERIFY_AADHAAR_OTP: '/aadhaar-api/boson/submit-otp',
   
   // PAN endpoints
-  VERIFY_PAN: '/pan-api/boson/verify',
+  VERIFY_PAN: '/pan-api/fetch-detailed',
   
   // Bank account endpoints
-  VERIFY_BANK_ACCOUNT: '/bank-api/boson/verify',
+  VERIFY_BANK_ACCOUNT: '/bank-api/verify',
 };
 
 // Mock API response function (for development)
@@ -86,27 +88,45 @@ const mockApiResponse = async (endpoint: string, data: any) => {
   }
 };
 
-// Gridlines API service
+const makeApiRequest = async (endpoint: string, data: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY,
+        'X-Auth-Type': 'API-Key',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || 'API request failed');
+    }
+    return result;
+  } catch (error) {
+    console.error(`Error calling ${endpoint}:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
 const gridlinesApi = {
-  // Aadhaar verification APIs
-  generateAadhaarOTP: async (aadhaar: string) => {
-    // In a real implementation, you would use fetch or axios to call the actual API
-    // For this example, we'll use the mock API
-    return await mockApiResponse(ENDPOINTS.GENERATE_AADHAAR_OTP, { aadhaar });
+  generateAadhaarOTP: async (aadhaar_number: string, consent: string) => {
+    return await makeApiRequest(ENDPOINTS.GENERATE_AADHAAR_OTP, { aadhaar_number, consent });
   },
   
-  verifyAadhaarOTP: async (aadhaar: string, otp: string, txnId: string) => {
-    return await mockApiResponse(ENDPOINTS.VERIFY_AADHAAR_OTP, { aadhaar, otp, txnId });
+  verifyAadhaarOTP: async (otp: string, transaction_id: string, shareCode: string) => {
+    return await makeApiRequest(ENDPOINTS.VERIFY_AADHAAR_OTP, { otp, transaction_id, shareCode });
   },
   
-  // PAN verification API
-  verifyPAN: async (pan: string, aadhaar?: string) => {
-    return await mockApiResponse(ENDPOINTS.VERIFY_PAN, { pan, aadhaar });
+  verifyPAN: async (pan_number: string, aadhaar_number?: string) => {
+    return await makeApiRequest(ENDPOINTS.VERIFY_PAN, { pan_number, aadhaar_number });
   },
   
-  // Bank account verification API
   verifyBankAccount: async (accountNumber: string, ifsc: string) => {
-    return await mockApiResponse(ENDPOINTS.VERIFY_BANK_ACCOUNT, { accountNumber, ifsc });
+    return await makeApiRequest(ENDPOINTS.VERIFY_BANK_ACCOUNT, { accountNumber, ifsc });
   }
 };
 
