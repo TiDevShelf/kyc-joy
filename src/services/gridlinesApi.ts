@@ -66,10 +66,8 @@ const mockApiResponse = async (endpoint: string, data: any) => {
           message: 'PAN verified successfully' 
         };
       }
-      return { success: false, message: 'Invalid PAN' };
-      
+      return { success: false, message: 'Invalid PAN' };   
     case ENDPOINTS.VERIFY_BANK_ACCOUNT:
-      // Simple logic: accept if account number is 8+ digits and IFSC is valid format
       if (data.accountNumber.length >= 8 && /^[A-Z]{4}0[A-Z0-9]{6}$/.test(data.ifsc)) {
         return { 
           success: true,
